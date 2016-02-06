@@ -16,7 +16,7 @@ int leftMotorForward = 9;
 int leftMotorBack = 3;
 
 void setup() {
-  pinMode(rightMotorForward, OUTPUT);			//piny wyjsciowe
+  pinMode(rightMotorForward, OUTPUT);      //piny wyjsciowe
   pinMode(rightMotorBack, OUTPUT);
   pinMode(leftMotorForward, OUTPUT);
   pinMode(leftMotorBack, OUTPUT);
@@ -28,19 +28,19 @@ void loop() {
    
   
   qtra.read(sensorValues);
-  Serial.println(sensorValues[5]);
-  if (sensorValues[1] < 300 && sensorValues[4] < 300)
+  //Serial.println(sensorValues[5]);
+  if (sensorValues[1] < 600 && sensorValues[4] < 600)
   {
     straight();
   }
   else
   {
-    if (sensorValues[1] > 300)
+    if (sensorValues[1] > 600)
     {
       turnRight();
-      if (sensorValues[0] > 300)
+      if (sensorValues[0] > 600)
       {
-        while (sensorValues[0] > 300)
+        while (sensorValues[0] > 600)
         {
 
           strongTurnRight();
@@ -51,10 +51,10 @@ void loop() {
     else
     {
       turnLeft();
-      if (sensorValues[5] > 300)
+      if (sensorValues[5] > 600)
       {
         
-        while (sensorValues[5] > 300)
+        while (sensorValues[5] > 600)
         {
 
           strongTurnLeft();

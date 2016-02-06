@@ -1,0 +1,106 @@
+#include <QTRSensors.h>
+
+#define NUM_SENSORS             6  // ilosc uzywanych czujnikow
+#define NUM_SAMPLES_PER_SENSOR  4  // average 4 analog samples per sensor reading
+#define EMITTER_PIN             2  // emitter is controlled by digital pin 2
+
+QTRSensorsAnalog qtra((unsigned char[]) {
+  A4, A0, A1, A2, A3, A5
+},
+NUM_SENSORS, NUM_SAMPLES_PER_SENSOR, EMITTER_PIN);
+unsigned int sensorValues[NUM_SENSORS];
+
+int rightMotorForward = 5;
+int rightMotorBack = 6;
+int leftMotorForward = 9;
+int leftMotorBack = 3;
+
+void setup() {
+  pinMode(rightMotorForward, OUTPUT);			//piny wyjsciowe
+  pinMode(rightMotorBack, OUTPUT);
+  pinMode(leftMotorForward, OUTPUT);
+  pinMode(leftMotorBack, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  
+   
+  
+  qtra.read(sensorValues);
+  Serial.println(sensorValues[5]);
+  if (sensorValues[1] < 300 && sensorValues[4] < 300)
+  {
+    straight();
+  }
+  else
+  {
+    if (sensorValues[1] > 300)
+    {
+      turnRight();
+      if (sensorValues[0] > 300)
+      {
+        while (sensorValues[0] > 300)
+        {
+
+          strongTurnRight();
+          qtra.read(sensorValues);
+        }
+      }
+    }
+    else
+    {
+      turnLeft();
+      if (sensorValues[5] > 300)
+      {
+        
+        while (sensorValues[5] > 300)
+        {
+
+          strongTurnLeft();
+          qtra.read(sensorValues);
+        }
+      }
+    }
+  }
+}
+
+void straight()
+{
+  analogWrite(rightMotorForward, 200 );
+  analogWrite(leftMotorForward,200);
+  analogWrite(leftMotorBack, 0);
+  analogWrite(rightMotorBack, 0);
+}
+
+void turnLeft()
+{
+  analogWrite(rightMotorForward, 200);
+  analogWrite(leftMotorForward, 0);
+  analogWrite(leftMotorBack, 0);
+  analogWrite(rightMotorBack, 0);
+}
+
+void turnRight()
+{
+  analogWrite(rightMotorForward, 0);
+  analogWrite(leftMotorForward, 200);
+  analogWrite(leftMotorBack, 0);
+  analogWrite(rightMotorBack, 0);
+}
+
+void strongTurnLeft()
+{
+  analogWrite(leftMotorForward, 0);
+  analogWrite(rightMotorForward, 255);
+  analogWrite(leftMotorBack, 200);
+  analogWrite(rightMotorBack, 0);
+}
+
+void strongTurnRight()
+{
+  analogWrite(leftMotorForward, 255);
+  analogWrite(rightMotorForward, 0);
+  analogWrite(leftMotorBack, 0);
+  analogWrite(rightMotorBack, 200);
+}

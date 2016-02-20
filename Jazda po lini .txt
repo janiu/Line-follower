@@ -1,8 +1,11 @@
+#include <Timers.h>
 #include <QTRSensors.h>
 
 #define NUM_SENSORS             6  // ilosc uzywanych czujnikow
 #define NUM_SAMPLES_PER_SENSOR  4  // average 4 analog samples per sensor reading
 #define EMITTER_PIN             2  // emitter is controlled by digital pin 2
+
+Timers <1> timer;  
 
 QTRSensorsAnalog qtra((unsigned char[]) {
   A4, A0, A1, A2, A3, A5
@@ -14,63 +17,26 @@ int rightMotorForward = 5;
 int rightMotorBack = 6;
 int leftMotorForward = 9;
 int leftMotorBack = 3;
-
+void jazda();
 void setup() {
   pinMode(rightMotorForward, OUTPUT);      //piny wyjsciowe
   pinMode(rightMotorBack, OUTPUT);
   pinMode(leftMotorForward, OUTPUT);
   pinMode(leftMotorBack, OUTPUT);
+  timer.attach(0, 10, jazda);
   Serial.begin(9600);
 }
-
-void loop() {
-  
-   
-  
-  qtra.read(sensorValues);
-  //Serial.println(sensorValues[5]);
-  if (sensorValues[1] < 600 && sensorValues[4] < 600)
-  {
-    straight();
-  }
-  else
-  {
-    if (sensorValues[1] > 600)
-    {
-      turnRight();
-      if (sensorValues[0] > 600)
-      {
-        while (sensorValues[0] > 600)
-        {
-
-          strongTurnRight();
-          qtra.read(sensorValues);
-        }
-      }
-    }
-    else
-    {
-      turnLeft();
-      if (sensorValues[5] > 600)
-      {
-        
-        while (sensorValues[5] > 600)
-        {
-
-          strongTurnLeft();
-          qtra.read(sensorValues);
-        }
-      }
-    }
-  }
-}
-
 void straight()
 {
   analogWrite(rightMotorForward, 200 );
   analogWrite(leftMotorForward,200);
   analogWrite(leftMotorBack, 0);
   analogWrite(rightMotorBack, 0);
+}
+
+
+void loop() {    
+ timer.process();
 }
 
 void turnLeft()
@@ -93,7 +59,7 @@ void strongTurnLeft()
 {
   analogWrite(leftMotorForward, 0);
   analogWrite(rightMotorForward, 255);
-  analogWrite(leftMotorBack, 200);
+  analogWrite(leftMotorBack, 255);
   analogWrite(rightMotorBack, 0);
 }
 
@@ -102,5 +68,49 @@ void strongTurnRight()
   analogWrite(leftMotorForward, 255);
   analogWrite(rightMotorForward, 0);
   analogWrite(leftMotorBack, 0);
-  analogWrite(rightMotorBack, 200);
+  analogWrite(rightMotorBack, 255);
+}
+void jazda(){
+  qtra.read(sensorValues);
+  if(sensorValues[0]<600 || sensorValues[1]<600 || sensorValues[2]<600 || sensorValues[3]<600 || sensorValues[4]<600 || sensorValues[5]<600){
+    straight();
+
+  
+  if (sensorValues[1] < 600 && sensorValues[4] < 600)
+  {
+    straight();
+   }
+  else
+  {
+   
+    if (sensorValues[1] > 600)
+    {
+      turnRight();
+      if (sensorValues[0] > 600)
+      {
+        while (sensorValues[0] > 600)
+        {
+
+          strongTurnRight();
+          qtra.read(sensorValues);
+        }
+      }
+    }
+    else
+    {
+
+      turnLeft();
+
+      if (sensorValues[5] > 600)
+      {        
+        while (sensorValues[5] > 600)
+        {
+
+          strongTurnLeft();
+          qtra.read(sensorValues);
+        }
+      }
+    }
+  }
+}
 }

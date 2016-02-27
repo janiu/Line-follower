@@ -1,0 +1,95 @@
+  #include<QTRSensors.h>
+  #include <Timers.h>
+
+  #define NUM_SENSORS 6 // ilosc uzywanych czujnikow
+  #define NUM_SAMPLES_PER_SENSOR 4 // average 4 analog samples per sensor
+  #define EMITTER_PIN 2 // emitter is controlled by digital pin 2
+
+  Timers <1> timer;
+
+  QTRSensorsAnalog qtra((unsigned char[]) {
+    A4, A0, A1, A2, A3, A5
+  },
+  NUM_SENSORS, NUM_SAMPLES_PER_SENSOR, EMITTER_PIN);
+  unsigned int sensorValues[NUM_SENSORS];
+  int sensorWeight[NUM_SENSORS]={-40,-20,-10,10,20,40};
+
+  int rightMotorForward = 5;
+  int rightMotorBack = 6;
+  int leftMotorForward = 9;
+  int leftMotorBack = 3;
+  int error=0;
+  int previousError=0;
+  int valuePD=0;
+  int basicSpeed=150;
+  int Kp=3;
+  int Kd=1;
+  
+  void calculateSensor();
+  void calculateError();
+  void calculatePD();
+  void jazda();
+
+  void setup() {
+    pinMode(rightMotorForward, OUTPUT); // piny wyjsciowe
+    pinMode(rightMotorBack, OUTPUT);
+    pinMode(leftMotorForward, OUTPUT);
+    pinMode(leftMotorBack, OUTPUT);
+    timer.attach(0, 10, jazda);
+    Serial.begin(9600);
+  }
+
+  void loop() {
+    timer.process();
+    Serial.println(valuePD); 
+    
+  }
+
+  void calculateSensor() {
+    qtra.read(sensorValues);
+    for (int i = 0; i < NUM_SENSORS; i++) {
+      if (sensorValues[i] > 600) {
+        sensorValues[i] = 1;
+      } else {
+        sensorValues[i] = 0;
+      }
+    }
+  }
+
+  void calculateError(){
+    int counter=0; 
+     for(int i= 0 ; i< NUM_SENSORS ; i++){
+      error=error+(sensorValues[i]*sensorWeight[i]);
+        if(sensorValues[i]==1){
+          counter++;
+        }
+     }   
+          
+     if(counter != 0){
+          error=error/counter;
+          previousError=error;        
+     }
+     else{
+      if(previousError>-10 || previousError<10){
+        error=0;
+        previousError=0;
+      }
+      else{
+        error=previousError;
+      }
+     }
+  }
+
+  void calculatePD() {
+    
+    int differential = error - previousError;
+    valuePD = (Kp * error) + (Kd * differential);
+  }
+
+  void jazda() {
+    calculateSensor();
+    calculateError();
+    calculatePD();
+    analogWrite(rightMotorForward, basicSpeed + valuePD);
+    analogWrite(leftMotorForward, basicSpeed - valuePD);
+  }
